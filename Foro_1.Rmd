@@ -1,0 +1,420 @@
+---
+title: '**Modelamiento Estadístico y Sistemas Recomendadores: Foro 1**'
+author: '*Patricio Águila Márquez*'
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+### I. Considere los datos ‘hours_peer_week.csv’, que contiene las horas que trabaja un grupo de trabajadores de EE.UU. a la semana.
+
+
+1) Cargue el conjunto de datos en la sesión de trabajo de R usando la función read.table.
+```{r }
+#Para leer el set de datos, se usará la función 'read.csv' 
+datos <- read.csv("../Archivos R/hour_per_week.csv",header=TRUE)
+```
+
+2) Calcule en forma manual el puntaje Z para las horas de trabajo semanal.
+```{r}
+#Cálculo de la media
+mean_o <- mean(datos$hour_per_week)
+#Cálculo de la desviación estándar
+desv_o <- sd(datos$hour_per_week)
+#Valor de la media, redondeado a dos decimales
+round(mean_o,2)
+#Valor de la desviación estándar, redondeado a dos decimales
+round(desv_o,2)
+
+#Cálculo del puntaje Z: todas las observaciones (32.561) son normalizadas
+puntaje_z <- (datos$hour_per_week-mean_o)/desv_o
+#Cálculo de la media normalizada
+mean_z <- mean(puntaje_z)
+#Cálculo de la desviación normalizada
+desv_z <- sd(puntaje_z)
+#Valor de la media normalizada
+round(mean_z,2)
+#Valor de la desviación normalizada
+round(desv_z,2)
+```
+\newpage
+3) Construya un histograma de los datos originales y los datos estandarizados. Describa las características principales de los datos, comentando en el foro sobre la simetría y uni- o multi-modalidad de la distribución de los datos.
+
+```{r, fig.width=8, fig.height=6}
+#Gráficos de histograma mostrados en una fila y dos columnas
+par(mfrow=c(1,2))
+#Histograma de los datos originales, mostrados de 10 en 10
+hist(datos$hour_per_week,10,
+     main = "Histograma Datos \n Originales",
+     ylab = "Frecuencia",
+     xlab = "hrs/semana",
+     ylim = c(0, 20000),
+     col="gold",
+     cex.axis=0.5)
+abline(h=seq(0,20000,5000), v = seq(0,100,20), lty="dotted", col = "grey")
+#Hisotrama de los datos normalizados
+hist(puntaje_z, 
+     main = "Histograma Datos \n Normalizados",
+     ylab = "Frecuencia",
+     xlab = "hrs/semana",
+     ylim = c(0, 20000),
+     col = "light blue",
+     cex.axis=0.5)
+abline(h=seq(0,20000,5000), v = seq(-2,4,2), lty="dotted", col = "grey")
+```
+\newpage
+```{r}
+#Construcción de indicadores adicionales para respoder a la pregunta 3:
+
+#Función 'summary' 
+summary(datos)
+
+#Cálculo manual de la moda
+moda <- function(d){
+  names(which(table(d)==max(table(d))))
+}
+#Valor de la moda
+moda_o <- as.numeric(moda(datos$hour_per_week))
+moda_o
+#Cálculo manual del coeficiente de asimetría de Pearson:
+coef_pearson <- (mean_o - moda_o)/desv_o
+round(coef_pearson,2)
+```
+
+**Respuesta a pregunta 3:** 
+
+* Los datos de las horas trabajadas por semana presentan una distribución unimodal y levemente asimétrica hacia la derecha.
+  + Unimodal, dado que tienen un solo peak, en las 40 horas.
+  + Levemente asimétrica hacia la derecha, debido a su coeficiente de Pearson (*), el cual es positivo, lo que indicaría que hay más valores separados de la media hacia la derecha.
+* De la representación gráfica, se puede determinar que el 50% de los datos está concentrado entre las 40 y 45 horas.
+
+(*) [Pearson’s Coefficient of Skewness, 
+
+https://www.statisticshowto.com/pearsons-coefficient-of-skewness/, 
+
+Interpretation] 
+
+\newpage
+4) Construya un boxplot de los datos originales y los datos estandarizados. Comente sus resultados en el foro. ¿Existe evidencia de la presencia de “outliers”? Justifique su respuesta en el foro.
+
+```{r, fig.width=8, fig.height=6}
+#Distribución de gráficos en una fila y dos columnas
+par(mfrow=c(1,2))
+#Boxblot datos originales
+boxplot(datos$hour_per_week,
+        main = "Boxplot Datos \n Originales",
+        ylab = "hrs/semana",
+        col = "chartreuse",
+        cex.axis=0.7)
+#Boxplot datos normalizados
+boxplot(puntaje_z,
+        main = "Boxplot Datos \n Normalizados",
+        ylab = "hrs/semana",
+        col = "chocolate",
+        cex.axis=0.7)
+```
+**Respuesta a pregunta 4:** 
+
+* El boxplot muestra la presencia de valores outliers. Existe mucha dispersión de datos, principalmente hacia la derecha.
+* Sería de gran ayuda conocer variables como el departamento, cargo, ubicación geográfica, edad y sexo de los trabajadores, los que podrían arrojar luces sobre las razones de los valores atípicos.
+
+
+
+\newpage
+5) Repita los pasos 3) y 4) usando la función scale.
+
+```{r, fig.width=6, fig.height=8}
+#Se agrupan los 4 gráficos en dos filas y dos columnas 
+par(mfrow=c(2,2))
+#Histograma de los datos originales
+hist(datos$hour_per_week, 10,
+     main = "Histograma Datos \n Originales",
+     ylab = "Frecuencia",
+     xlab = "hrs/semana",
+     ylim = c(0, 20000),
+     col="gold",
+     cex.axis=0.5)
+abline(h=seq(0,20000,5000), v = seq(0,100,20), lty="dotted", col = "grey")
+#Hisotrama de los datos normalizados
+hist(scale(datos$hour_per_week),
+     main = "Histograma Datos \n Normalizados",
+     ylab = "Frecuencia",
+     xlab = "hrs/semana",
+     ylim = c(0, 20000),
+     col = "light blue",
+     cex.axis=0.5)
+abline(h=seq(0,20000,5000), v = seq(-2,4,2), lty="dotted", col = "grey")
+#Boxblot datos originales
+boxplot(datos$hour_per_week,
+        main = "Boxplot Datos \n Originales",
+        ylab = "hrs/semana",
+        col = "chartreuse",
+        cex.axis=0.7)
+#Boxplot datos normalizados
+boxplot(scale(datos$hour_per_week),
+        main = "Boxplot Datos \n Normalizados",
+        ylab = "hrs/semana",
+        col = "chocolate",
+        cex.axis=0.7)
+
+```
+\newpage
+
+### II. Considere los datos ‘titanic.csv’, sobre la tragedia del Titanic, cuya descripción se muestra en la siguiente tabla.
+
+| **Variable**|**Descripción** |
+|:--|:------------|
+|passengerId|Identificador de pasajero|
+|Survived|Variable que indica 1 si el pasajero sobrevivió y 0 si no.|
+|Pclass|Clase del pasajero (1=primera clase, 2=segunda clase, 3=tercera clase)|
+|Name|Nombre del pasajero|
+|Sex|Género del pasajero|
+|Age|Edad del pasajero|
+|Sibsp|Número de hermanos o cónyuges a bordo|
+|Parch|Número de padres o hermanos a bordo|
+|Ticket|Número de ticket|
+|Fare|Precio del ticket (en moneda local)|
+|embarked|Puerto de embarque (C = Cherbourg; Q = Queenstown; S = Southampton)|
+
+Realice las siguientes actividades:
+
+1) Cargue el conjunto de datos en la sesión de trabajo de R usando la función read.table.
+
+```{r}
+#Para leer el set de datos, se usará la función 'read.csv' 
+titanic_data <- read.csv("../Archivos R/titanic.csv",header=TRUE)
+```
+
+2) Usando la función summary(), obtenga estadísticos descriptivos de las variables y discuta los resultados en el foro.
+
+```{r}
+#Lectura de la data sin procesar
+summary(titanic_data)
+#Detalle del tipo de variables sin procesar
+str(titanic_data)
+```
+
+\newpage
+3) Cree una variable que indique el tamaño total de la familia del pasajero (incluyéndose él mismo).
+
+```{r}
+#El tamaño de la familia se obtiene sumando las columnas 'SibSp', 'Parch',
+#incluyendo al pasajero
+titanic_data$Fsize <- titanic_data$SibSp + titanic_data$Parch + 1
+```
+
+4) Grafique la relación entre la tasa de sobrevivientes y el tamaño de la familia.
+
+```{r}
+#Se cargan las librerías para procesar los datos
+library(ggplot2)
+library(ggthemes)
+library(scales)
+
+#Creación de la gráfica "tamaño familia vs % supervivencia"
+ggplot(titanic_data, aes(factor(Fsize), (Survived))) +
+         stat_summary(fun=mean, geom="point", shape=21, fill="red", size=2) +
+         scale_y_continuous(labels=percent_format(), limits=c(0,1)) +
+         theme_bw()
+
+```
+
+\newpage
+5) En base a lo observado en el punto anterior, proponga e implemente la discretización del tamaño de la familia. Justifique su decisión en el foro.
+```{r}
+#Para poder fundamentar la respuesta a la pregunta 5, se realizan previamente, 
+#los siguientes cálculos:
+
+#Cantidad de pasajeros por tamaño de familia
+table(titanic_data$Fsize)
+#Porcentaje de supervivencia por tamaño de familia
+round(prop.table(table(titanic_data$Survived,
+                       titanic_data$Fsize),margin = 2),2)
+```
+
+```{r}
+#Se propone la siguiente discretización:
+#Familias de tamaño 1 (1), de 2 a 4 (2), de 5 a 7 (3) y mayor a 7 (4).
+
+#Familia de 1 integrante
+titanic_data$FsizeD[titanic_data$Fsize == 1] <- 1
+#Familia de 2 a 4 integrantes  
+titanic_data$FsizeD[titanic_data$Fsize < 5 & titanic_data$Fsize > 1] <- 2
+#Familia de 5 a 7 integrantes
+titanic_data$FsizeD[titanic_data$Fsize < 8 & titanic_data$Fsize > 4] <- 3
+#Familia de 8 o más integrantes 
+titanic_data$FsizeD[titanic_data$Fsize > 7] <- 4
+
+#Cantidad de pasajeros por tamaño de familia discretizada
+table(titanic_data$FsizeD)
+##Porcentaje de supervivencia por tamaño de familia discretizada
+round(prop.table(table(titanic_data$Survived,
+                       titanic_data$FsizeD),margin = 2),2)
+```
+
+```{r, fig.width=8, fig.height=4, include=FALSE}
+#Gráfico de supervivencia con datos discretizados
+ggplot(titanic_data, aes(factor(FsizeD), (Survived))) +
+         stat_summary(fun=mean, geom="point", shape=21, fill="red", size=2) +
+         scale_y_continuous(labels=percent_format(), limits=c(0,1)) +
+         theme_bw()
+```
+
+\newpage
+6) Identifique los pasajeros con datos faltantes para la variable embarked y age usando la función is.na(). ¿Qué tipo de mecanismo de generación de datos faltantes podría ser válido en cada caso? Justifique su respuesta en el foro.
+
+```{r, include=FALSE}
+colSums(is.na(titanic_data))
+sapply(titanic_data, function(x) sum(is.na(x)))
+```
+
+
+```{r}
+#Creación de una variable que filtre los valores NA en la columna 'Embarked'
+Embarked_NA <- titanic_data[is.na(titanic_data$Embarked),]
+#Listado de pasajeros con valores NA en la columna 'Embarked'
+Embarked_NA
+
+#Creación de una variable que filtre los valores NA en la columna 'Age'
+Age_NA <- titanic_data[is.na(titanic_data$Age),]
+#Listado de los 10 primeros pasajeros con valores NA en la columna 'Age'
+head(Age_NA,10)
+#Total de pasajeros con valores NA en la columna 'Age'
+nrow(Age_NA)
+```
+\newpage
+7) Genere un conjunto de datos completos al imputar los valores faltantes de la variable embarked por la del puerto “C” y los valores faltantes de la variable edad por el promedio de edad de los datos observados.
+
+```{r}
+#Reemplazar datos 'NA' en columna 'Embarked' por puerto 'C'
+titanic_data$Embarked[Embarked_NA$PassengerId] <- 'C'
+#Reemplazar datos 'NA' en columna 'Age' por el valor de la media de 'Age'
+titanic_data$Age[Age_NA$PassengerId] <- mean(na.omit(titanic_data$Age))
+```
+
+```{r}
+#Para la visualización final de los datos, se convierten a factor las columnas:
+#Survived, Pclass, Sex, Embarked, Title, FsizeD
+cols<-c('Survived','Pclass','Sex','Embarked','Title','FsizeD',
+        'Fsize','SibSp','Parch')
+for (i in cols){
+  titanic_data[,i] <- as.factor(titanic_data[,i])
+}
+
+#Resumen de los datos procesados
+summary(titanic_data)
+#Características de las variables
+str(titanic_data)
+```
+
+**Análisis de los estadísticos descriptivos:**
+
+* Al abrir la tabla de datos sin procesar, se puede constatar que hay valores faltantes en las columnas 'Age' (177), y 'Embarked' (2).
+
+* Las siguientes variables tienen valores discretos: 'Survived', 'Pclass', 'Sex', 'Embarked', 'SibSp', 'Parch' y 'Title', por lo cual fueron convertidas a factores para poder visualizar la frecuencia absoluta de cada uno de sus niveles.
+
+* La variables 'Age' y 'Fare' son numéricas de carácter continuo.
+
+* Las variables 'Name' y 'Ticket' son del tipo carácter, por lo cual no se pueden obtener estadísticos descriptivos de ellas. Bajo esta premisa, son prescindibles.
+
+**Propuesta para discretizar el tamaño de la familia:**
+
+* Considero discretizar el tamaño de la familia en los siguientes grupos:
+  + Familias de 1 pasajero: que representan el 60% del total de pasajeros.
+  + Familias de 2 a 4 pasajeros: debido a que son quienes presentan mayores opciones de permanecer con vida.
+  + Familias de 5 a 7 pasajeros: los cuales tienen un porcentaje de supervivencia muy parecido entre sí, pero inferior al grupo anterior.
+  + Familias de más de 8 o más pasajeros: quienes tienen nula opción de supervivencia (ver segunda tabla en página 10).
+
+* El resultado de la discretización muestra que quienes tienen más opciones de sobrevivir son los grupos familiares de 2 a 4 miembros (con un 58%), seguidos de pasajeros que viajaban solos (con un 30%). En penúltima posición se encuentra el grupo de familias de 5 a 7 miembros (con un 20% de probabilidad de sobrevivir), para finalizar con los grupos de 8 o más integrantes (con 0%). 
+
+**Mecanismos para la generación de datos faltantes**
+
+* Para la variable 'Embarked', otra forma de lidiar con datos faltantes sería omitirlos (**), ya que tienen un peso del 0,22% respecto al total (2 de 891 observaciones). O bien, se les podría asignar aleatoriamente alguna de las 3 categorías ("C", "Q" o "S").
+
+* Para la variable 'Age', aparte de la solución propuesta (completar datos faltantes reemplazándolos con la media de la edad), podría evaluarse el siguiente caso:
+\newpage
+  + Generar 'x' números aleatorios (en este caso 177, por la cantidad de valores 'NA'), siguiendo una distribución normal.
+  + Con este método, el resultado conserva la distribución original de los datos en la columna ‘Age’. 
+```{r}
+#Se crea una nueva tabla para no sobre-escribir la anterior
+titanic2 <- read.csv("../Archivos R/titanic.csv",header=TRUE)
+#Se calcula la media de los datos originales
+mean2 <- round(mean(na.omit(titanic2$Age)),2)
+#Se calcula la desviación estándar
+desv2 <- round(sd(na.omit(titanic2$Age)),2)
+
+#Se generan números aleatorios que sigan una distribución normal, 
+#los cuales reemplazarán a los valores NA de la columna 'Age'
+random_NA<-abs(rnorm(n=177,mean=mean2,sd=desv2))
+
+#Se crea una variable para guardar la columna 'Age'
+Age_random_NA <- data.frame(titanic2$Age)  
+#Se asigna a los valores NA los datos guardados de la variable que 
+#generó los números aleatorios
+Age_random_NA[is.na(Age_random_NA)] <- random_NA
+
+#Comparación de estadísticos: datos originales
+summary(na.omit((titanic2$Age)))
+#Comparación de estadísticos: datos con reemplazo de valores 'NA'
+summary(Age_random_NA$titanic2.Age)
+```
+
+```{r}
+#Gráficos de histograma mostrados en una fila y dos columnas
+par(mfrow=c(1,2))
+#Histograma de los datos originales
+hist(na.omit((titanic2$Age)),
+main = "Histograma Datos \n Originales",
+ylab = "Frecuencia",
+xlab = "Edad",
+ylim = c(0, 250),
+col="gold",
+cex.axis=0.5)
+abline(h=seq(0,250,50), v = seq(0,80,10), lty="dotted", col = "grey")
+#Hisotrama de los datos con reemplazo random
+hist(Age_random_NA$titanic2.Age,
+main = "Histograma Datos \n con reemplazo 'rnorm()'",
+ylab = "Frecuencia",
+xlab = "Edad",
+ylim = c(0, 300),
+col = "light blue",
+cex.axis=0.5)
+abline(h=seq(0,250,50), v = seq(0,80,10), lty="dotted", col = "grey")
+
+#La nueva representación gráfica conserva la distribución de los datos originales
+```
+
+
+```{r, include=FALSE}
+#  + Completar los valores 'NA' con la media de la edad por sexo (variable 'Sex')
+```
+
+```{r, include=FALSE}
+#+ Completar los valores 'NA' con la media de la edad por clase (variable 'Pclass')
+```
+  
+
+(**) [Parte 1: Preprocesamiento de Datos, Datos faltantes, Diapositiva 8]
+
+#############################
+Apuntes ayudantía 31-08-2020
+Parte 1.
+* outliers, otorgan candidatos a datos atípicos
+* ¿qué sucede cuando tengo datos no paramétricos y muchas variables a analizar?
+
+Parte 2.
+* Qué hago con los datos faltantes?
+* Por qué faltan datos?
+  + **Ejemplo: encuesta depresión entre hombres y mujeres.**
+  + (MCAR): respuestas se pierden en el correo. El único que se puede testear estadísticamente.
+  + (MAR): hombres tienen menor probabilidad de responder, pero no debido a la depresión.
+  + (MNAR): hombres no responden la encuesta porque tienen depresión.
+  + ¿Cómo determinar mecanismo?: requiere conocimiento experto e información externa.
+  + Se recomienda hacer análisis con NA's, sin NA's, con otros. 
+  + Fijarse en la relación que existe en los datos faltantes.
+  
